@@ -9,16 +9,6 @@
 
 #define CHECK_SHAPE(x, ...) TORCH_CHECK(x.sizes() == torch::IntArrayRef({__VA_ARGS__}), #x " must have shape (" #__VA_ARGS__ ")")
 
-void print_usage(){
-    size_t freeBytes, totalBytes;
-    cudaMemGetInfo(&freeBytes, &totalBytes);
-    size_t usedBytes = totalBytes - freeBytes;
-
-    std::cout << " Total Memory (B): " << (totalBytes ) << std::endl;
-    std::cout << " Free Memory (B): " << (freeBytes ) << std::endl;
-    std::cout << " Used Memory (B): " << (usedBytes ) << std::endl;
-}
-
 
 at::Tensor run_fnn_forward(const at::Tensor& input, const at::Tensor& weight1, const at::Tensor& weight2, c10::optional<const at::Tensor> bias1, c10::optional<const at::Tensor> bias2) {
 
