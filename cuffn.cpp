@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <torch/extension.h>
+#include <torch/script.h>
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDAGuard.h>
 #include <cutlass/numeric_types.h>
@@ -10,7 +11,7 @@
 #define CHECK_SHAPE(x, ...) TORCH_CHECK(x.sizes() == torch::IntArrayRef({__VA_ARGS__}), #x " must have shape (" #__VA_ARGS__ ")")
 
 
-at::Tensor run_fnn_forward(const at::Tensor& input, const at::Tensor& weight1, const at::Tensor& weight2, c10::optional<const at::Tensor> bias1, c10::optional<const at::Tensor> bias2) {
+torch::Tensor run_fnn_forward(const torch::Tensor& input, const torch::Tensor& weight1, const torch::Tensor& weight2, const torch::optional<torch::Tensor> bias1, const torch::optional<torch::Tensor> bias2) {
 
     // std::cout << __FILE__ << " " << __FUNCTION__ << std::endl;
     
@@ -70,8 +71,8 @@ at::Tensor run_fnn_forward(const at::Tensor& input, const at::Tensor& weight1, c
         TORCH_CHECK(weight2_out_features == input_features, "weight2_out_features must match input_features");
     }
 
-    at::Tensor output = at::empty_like(input);
-    at::Tensor linear1_output = at::empty(std::vector<int64_t>({input_dim, weight1_out_features}), input.options());
+    torch::Tensor output = torch::empty_like(input);
+    torch::Tensor linear1_output = torch::empty(std::vector<int64_t>({input_dim, weight1_out_features}), input.options());
 
     // printf("output size in bytes: %d \n", output.element_size() * output.numel());
     // printf("linear1_output size in bytes: %d \n", linear1_output.element_size() * linear1_output.numel());
@@ -112,7 +113,7 @@ at::Tensor run_fnn_forward(const at::Tensor& input, const at::Tensor& weight1, c
     return output;
 }
 
-PYBIND11_MODULE(cuffn, m) {
-  m.doc() = "cuffn: an attempt for the fastest FFN implementation";
-  m.def("run_fnn_forward", &run_fnn_forward, "fwd function of ffn");
+TORCH_LIBRARY(cuffn, m) {
+//   m.doc() = "cuffn: an attempt for the fastest FFN implementation";
+  m.def("run_fnn_forward", &run_fnn_forward);
 }

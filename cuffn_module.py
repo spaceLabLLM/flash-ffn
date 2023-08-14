@@ -1,15 +1,15 @@
 import torch
 
 import math
-from cuffn import run_fnn_forward
-
+# from cuffn import run_fnn_forward
+torch.ops.load_library("cuffn.so")
 class ffnFunc(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, linear1_weight, linear2_weight, linear1_bias, linear2_bias):
         # ctx.save_for_backward(x, linear1_weight, linear2_weight, linear1_bias, linear2_bias)
         # print("Shapes:")
         # print(x.shape, linear1_weight.shape, linear2_weight.shape)
-        y = run_fnn_forward(x, linear1_weight, linear2_weight, linear1_bias, linear2_bias)
+        y = torch.ops.cuffn.run_fnn_forward(x, linear1_weight, linear2_weight, linear1_bias, linear2_bias)
         return y
 
     @staticmethod
