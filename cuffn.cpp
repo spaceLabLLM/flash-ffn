@@ -12,7 +12,9 @@
 
 
 torch::Tensor run_fnn_forward(const torch::Tensor& input, const torch::Tensor& weight1, const torch::Tensor& weight2, const torch::optional<torch::Tensor> bias1, const torch::optional<torch::Tensor> bias2) {
-
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    cublasStatus_t stat;
     // std::cout << __FILE__ << " " << __FUNCTION__ << std::endl;
     
     auto dprops = at::cuda::getCurrentDeviceProperties();
@@ -84,9 +86,6 @@ torch::Tensor run_fnn_forward(const torch::Tensor& input, const torch::Tensor& w
     const __half alpha = 1.;
     const __half beta = 0.;
 
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    cublasStatus_t stat;
 
     {
         const int M = input_dim;

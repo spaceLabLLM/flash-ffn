@@ -50,18 +50,29 @@ try:
 except AssertionError:
     import traceback; traceback.print_exc()
 
+torch.cuda.empty_cache()
+alloc_mem_ptr = torch.cuda.caching_allocator_alloc(int(1e9), device=th_device, stream=th_stream)
+    
+x = torch.randn([tokens_per_expert, input_dim], dtype=torch.float16, device=th_device)
 with torch.profiler.profile(
     activities=[
         ProfilerActivity.CPU,
         ProfilerActivity.CUDA,
     ],
+    with_stack=True,
 ) as prof:
-    with record_function("torch_linear"):
-        x = torch.randn([tokens_per_expert, input_dim], dtype=torch.float16, device=th_device)
+    with record_function("ffn_model"):
         torch.cuda.synchronize()
-        y = ffn_model.forward(x)
+        for _ in range(10):
+            y = ffn_model.forward(x)
         torch.cuda.synchronize()
-
+        
+torch.cuda.caching_allocator_delete(alloc_mem_ptr)
 # for evt in prof.key_averages():
 #     print(evt.key)
-print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
+print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
+
+prof.export_chrome_trace("trace_torch_cufnn.json")
+
+prof.export_stacks("./profiler_stacks_cuda.txt", "self_cuda_time_total")
+prof.export_stacks("./profiler_stacks_cpu.txt", "self_cpu_time_total")
